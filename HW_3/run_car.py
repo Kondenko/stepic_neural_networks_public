@@ -16,7 +16,7 @@ parser.add_argument("-v", "--visualise", action="store_true")
 parser.add_argument("--seed", type=int)
 args = parser.parse_args()
 
-print(args.steps, args.seed, args.filename, args.evaluate, args.visualise)
+# print(args.steps, args.seed, args.filename, args.evaluate, args.visualise)
 
 steps = args.steps
 seed = args.seed if args.seed else None # Use a random map
