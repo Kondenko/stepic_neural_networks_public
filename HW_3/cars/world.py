@@ -119,7 +119,7 @@ class SimpleCarWorld(World):
         if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
         collision_risk_reward = self.get_collision_risk_reward(vision)
-        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty
+        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward
 
     def get_collision_risk_reward(self, vision):
         from utils.funcs import find_middle
