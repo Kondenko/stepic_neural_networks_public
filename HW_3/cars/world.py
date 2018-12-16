@@ -26,27 +26,28 @@ class World(metaclass=ABCMeta):
 
 
 class SimpleCarWorld(World):
-    COLLISION_PENALTY =  # выберите сами
-    HEADING_REWARD =  # выберите сами
-    WRONG_HEADING_PENALTY =  # выберите сами
-    IDLENESS_PENALTY =  # выберите сами
-    SPEEDING_PENALTY =  # выберите сами
-    MIN_SPEED =  # выберите сами
-    MAX_SPEED =  # выберите сами
+
+    COLLISION_PENALTY = 0 * 1e0
+    HEADING_REWARD = 0 * 1e-1
+    WRONG_HEADING_PENALTY = 0 * 1e0
+    IDLENESS_PENALTY = 32 * 1e-1
+    SPEEDING_PENALTY = 32 * 1e-1
+    MIN_SPEED = 0.1 * 1e0
+    MAX_SPEED = 0.7 * 1e0
 
     size = (800, 600)
 
-    def __init__(self, num_agents, car_map, Physics, agent_class, **physics_pars):
+    def __init__(self, num_agents, car_map, physics, agent_class, **physics_pars):
         """
         Инициализирует мир
         :param num_agents: число агентов в мире
         :param car_map: карта, на которой всё происходит (см. track.py0
-        :param Physics: класс физики, реализующий столкновения и перемещения
+        :param physics: класс физики, реализующий столкновения и перемещения
         :param agent_class: класс агентов в мире
         :param physics_pars: дополнительные параметры, передаваемые в конструктор класса физики
         (кроме car_map, являющейся обязательным параметром конструктора)
         """
-        self.physics = Physics(car_map, **physics_pars)
+        self.physics = physics(car_map, **physics_pars)
         self.map = car_map
 
         # создаём агентов
@@ -70,7 +71,8 @@ class SimpleCarWorld(World):
         elif type(agents) is list:
             self.agents = agents
         else:
-            raise ValueError("Parameter agent should be int or list of agents instead of %s" % type(agents))
+            raise ValueError(
+                "Parameter agent should be int or list of agents instead of %s" % type(agents))
 
         self.agent_states = {a: CarState(pos, vel, heading) for a in self.agents}
         self.circles = {a: 0 for a in self.agents}
@@ -92,14 +94,16 @@ class SimpleCarWorld(World):
             next_agent_state, collision = self.physics.move(
                 self.agent_states[a], action
             )
-            self.circles[a] += angle(self.agent_states[a].position, next_agent_state.position) / (2*pi)
+            self.circles[a] += angle(self.agent_states[a].position, next_agent_state.position) / (
+                    2 * pi)
             self.agent_states[a] = next_agent_state
             a.receive_feedback(self.reward(next_agent_state, collision))
 
     def reward(self, state, collision):
         """
         Вычисление награды агента, находящегося в состоянии state.
-        Эту функцию можно (и иногда нужно!) менять, чтобы обучить вашу сеть именно тем вещам, которые вы от неё хотите
+        Эту функцию можно (и иногда нужно!) менять, чтобы обучить вашу сеть именно тем вещам,
+        которые вы от неё хотите
         :param state: текущее состояние агента
         :param collision: произошло ли столкновение со стеной на прошлом шаге
         :return reward: награду агента (возможно, отрицательную)
@@ -108,8 +112,11 @@ class SimpleCarWorld(World):
         heading_reward = 1 if a > 0.1 else a if a > 0 else 0
         heading_penalty = a if a <= 0 else 0
         idle_penalty = 0 if abs(state.velocity) > self.MIN_SPEED else -self.IDLENESS_PENALTY
-        speeding_penalty = 0 if abs(state.velocity) < self.MAX_SPEED else -self.SPEEDING_PENALTY * abs(state.velocity)
-        collision_penalty = - max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
+        speeding_penalty = \
+            0 if abs(state.velocity) < self.MAX_SPEED \
+            else -self.SPEEDING_PENALTY * abs(state.velocity)
+        collision_penalty = - max(abs(state.velocity), 0.1) * int(
+            collision) * self.COLLISION_PENALTY
 
         return heading_reward * self.HEADING_REWARD + heading_penalty * self.WRONG_HEADING_PENALTY + collision_penalty \
                + idle_penalty + speeding_penalty
@@ -123,11 +130,13 @@ class SimpleCarWorld(World):
         heading_reward = 1 if a > 0.1 else a if a > 0 else 0
         heading_penalty = a if a <= 0 else 0
         idle_penalty = 0 if abs(state.velocity) > self.MIN_SPEED else -self.IDLENESS_PENALTY
-        speeding_penalty = 0 if abs(state.velocity) < self.MAX_SPEED else -self.SPEEDING_PENALTY * abs(state.velocity)
-        collision_penalty = - max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
+        speeding_penalty = 0 if abs(
+            state.velocity) < self.MAX_SPEED else -self.SPEEDING_PENALTY * abs(state.velocity)
+        collision_penalty = - max(abs(state.velocity), 0.1) * int(
+            collision) * self.COLLISION_PENALTY
 
         return heading_reward * self.HEADING_REWARD + heading_penalty * self.WRONG_HEADING_PENALTY + collision_penalty \
-            + idle_penalty + speeding_penalty
+               + idle_penalty + speeding_penalty
 
     def run(self, steps=None):
         """
@@ -144,7 +153,8 @@ class SimpleCarWorld(World):
 
         for i, agent in enumerate(self.agents):
             try:
-                filename = "network_config_agent_%d_layers_%s.txt" % (i, "_".join(map(str, agent.neural_net.sizes)))
+                filename = "network_config_agent_%d_layers_%s.txt" % (
+                    i, "_".join(map(str, agent.neural_net.sizes)))
                 agent.to_file(filename)
                 print("Saved agent parameters to '%s'" % filename)
             except AttributeError:
@@ -169,7 +179,8 @@ class SimpleCarWorld(World):
             next_agent_state, collision = self.physics.move(
                 self.agent_states[agent], action
             )
-            self.circles[agent] += angle(self.agent_states[agent].position, next_agent_state.position) / (2*pi)
+            self.circles[agent] += angle(self.agent_states[agent].position,
+                                         next_agent_state.position) / (2 * pi)
             self.agent_states[agent] = next_agent_state
             rewards.append(self.eval_reward(next_agent_state, collision))
             agent.receive_feedback(rewards[-1])
@@ -217,7 +228,8 @@ class SimpleCarWorld(World):
                     vision[-1] = intersect
 
             assert vision[-1] < np.infty, \
-                "Something went wrong: {}, {}".format(str(state), str(agent.chosen_actions_history[-1]))
+                "Something went wrong: {}, {}".format(str(state),
+                                                      str(agent.chosen_actions_history[-1]))
         assert len(vision) == agent.rays + extras, \
             "Something went wrong: {}, {}".format(str(state), str(agent.chosen_actions_history[-1]))
         return vision
@@ -240,11 +252,14 @@ class SimpleCarWorld(World):
             steer, acc = a.chosen_actions_history[-1]
             state = self.agent_states[a]
             draw_text("Action: steer.: %.2f, accel: %.2f" % (steer, acc), self._info_surface, scale,
-                      self.size, text_color=white, bg_color=black, tlpoint=(self._info_surface.get_width() - 500, 10))
+                      self.size, text_color=white, bg_color=black,
+                      tlpoint=(self._info_surface.get_width() - 500, 10))
             draw_text("Inputs: |v|=%.2f, sin(angle): %.2f, circle: %.2f" % (
-                abs(state.velocity), np.sin(angle(-state.position, state.heading)), self.circles[a]),
+                abs(state.velocity), np.sin(angle(-state.position, state.heading)),
+                self.circles[a]),
                       self._info_surface, scale,
-                      self.size, text_color=white, bg_color=black, tlpoint=(self._info_surface.get_width() - 500, 50))
+                      self.size, text_color=white, bg_color=black,
+                      tlpoint=(self._info_surface.get_width() - 500, 50))
 
     def _get_agent_image(self, original, state, scale):
         angle = phase(state.heading) * 180 / pi

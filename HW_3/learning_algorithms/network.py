@@ -28,6 +28,7 @@ def sigmoid_prime(z):
 
 
 class Network(object):
+
     def __init__(self, sizes, output_function=sigmoid, output_derivative=sigmoid_prime):
         """
         Список ``sizes`` содержит количество нейронов в соответствующих слоях
