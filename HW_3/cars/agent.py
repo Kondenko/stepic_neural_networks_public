@@ -31,13 +31,13 @@ class SimpleCarAgent(Agent):
         :param history_data: количество хранимых нами данных о результатах предыдущих шагов
         """
         self.evaluate_mode = False  # этот агент учится или экзаменутеся? если учится, то False
-        self._rays = 5  # выберите число лучей ладара; например, 5
+        self._rays = 9  # выберите число лучей ладара; например, 5
         # here +2 is for 2 inputs from elements of Action that we are trying to predict
         self.neural_net = Network(sizes=
                                   [self.rays + 4,
                                    # внутренние слои сети: выберите, сколько и в каком соотношении вам нужно
                                    # например, (self.rays + 4) * 2 или просто число
-                                   self.rays,  # supposed to be changed
+                                   self.rays + 8,  # supposed to be changed
                                    1],
                                   output_function=lambda x: x, output_derivative=lambda x: 1)
         self.sensor_data_history = deque([], maxlen=history_data)
@@ -119,15 +119,16 @@ class SimpleCarAgent(Agent):
         highest_reward = max(rewards)
         best_action = rewards_to_controls_map[highest_reward]
 
+        # print(f"Available actions: {sorted(rewards_to_controls_map)}")
         # Добавим случайности, дух авантюризма. Иногда выбираем совершенно
         # рандомное действие
         if (not self.evaluate_mode) and (random.random() < 0.05):
             highest_reward = rewards[np.random.choice(len(rewards))]
             best_action = rewards_to_controls_map[highest_reward]
-        # следующие строки помогут вам понять, что предсказывает наша сеть
-        #     print("Chosen random action w/reward: {}".format(highest_reward))
-        # else:
-        #     print("Chosen action w/reward: {}".format(highest_reward))
+            # следующие строки помогут вам понять, что предсказывает наша сеть
+            print("Chosen random action w/reward: {}".format(highest_reward))
+        else:
+            print("Chosen action w/reward: {}".format(highest_reward))
 
         # запомним всё, что только можно: мы хотим учиться на своих ошибках
         self.sensor_data_history.append(sensor_info)
@@ -137,7 +138,7 @@ class SimpleCarAgent(Agent):
 
         return best_action
 
-    def receive_feedback(self, reward, train_every=50, reward_depth=7):
+    def receive_feedback(self, reward, train_every=30, reward_depth=7):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
         :param reward: оценка внешним миром наших действий
@@ -162,11 +163,10 @@ class SimpleCarAgent(Agent):
         # прежде чем собирать новые данные
         # (проверьте, что вы в принципе храните достаточно данных (параметр `history_data` в `__init__`),
         # чтобы условие len(self.reward_history) >= train_every выполнялось
-        if not self.evaluate_mode and (len(self.reward_history) >= train_every) and not (
-                self.step % train_every):
+        if not self.evaluate_mode and (len(self.reward_history) >= train_every) and not (self.step % train_every):
             X_train = np.concatenate([self.sensor_data_history, self.chosen_actions_history],
                                      axis=1)
             y_train = self.reward_history
             train_data = [(x[:, np.newaxis], y) for x, y in zip(X_train, y_train)]
             self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every,
-                                eta=0.05)
+                                eta=0.1)

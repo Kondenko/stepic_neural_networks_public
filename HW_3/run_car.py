@@ -18,7 +18,7 @@ args = parser.parse_args()
 print(args.steps, args.seed, args.filename, args.evaluate)
 
 steps = args.steps
-seed = args.seed if args.seed else 23
+seed = args.seed if args.seed else None # Use a random map
 np.random.seed(seed)
 random.seed(seed)
 m = generate_map(8, 5, 3, 3)
