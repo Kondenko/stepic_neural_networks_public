@@ -11,8 +11,12 @@
 import random
 import numpy as np
 
+from utils.plotter import ErrorPlotter
+
 
 #### Вспомогательные функции
+
+
 def sigmoid(z):
     """
     Сигмоида
@@ -54,6 +58,7 @@ class Network(object):
         self.output_function = output_function
         assert output_derivative is not None, "You should either provide derivative of the output function or leave it default!"
         self.output_derivative = output_derivative
+        self.plotter = ErrorPlotter()
 
     def feedforward(self, a):
         """
@@ -68,7 +73,7 @@ class Network(object):
 
         return output
 
-    def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
+    def SGD(self, training_data, epochs, mini_batch_size, eta, reg_lambda=0.0001, test_data=None):
         """
         Обучить нейронную сеть, используя алгоритм стохастического
         (mini-batch) градиентного спуска.
@@ -96,7 +101,7 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)
             ]
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, eta)
+                self.update_mini_batch(mini_batch, eta, reg_lambda, len(training_data))
             if test_data is not None:
                 success_tests = self.evaluate(test_data)
                 print("Эпоха {0}: {1} / {2}".format(j, success_tests, n_test))
@@ -105,7 +110,7 @@ class Network(object):
         if test_data is not None:
             return success_tests / n_test
 
-    def update_mini_batch(self, mini_batch, eta):
+    def update_mini_batch(self, mini_batch, eta, reg_lambda, n):
         """
         Обновить веса и смещения нейронной сети, сделав шаг градиентного
         спуска на основе алгоритма обратного распространения ошибки, примененного
@@ -117,15 +122,16 @@ class Network(object):
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+            delta_nabla_b, delta_nabla_w = self.backprop(x, y, len(mini_batch))
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
 
         eps = eta / len(mini_batch)
-        self.weights = [w - eps * nw for w, nw in zip(self.weights, nabla_w)]
+        self.weights = [(1 - eta * (reg_lambda / n)) * w - (eta / len(mini_batch)) * nw
+                        for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b - eps * nb for b, nb in zip(self.biases, nabla_b)]
 
-    def backprop(self, x, y):
+    def backprop(self, x, y, batch_size):
         """
         Возвращает кортеж ``(nabla_b, nabla_w)`` -- градиент целевой функции по всем параметрам сети.
         ``nabla_b`` и ``nabla_w`` -- послойные списки массивов ndarray,
@@ -155,6 +161,8 @@ class Network(object):
         delta = self.cost_derivative(activations[-1], y) * self.output_derivative(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].T)
+
+        self.plotter.append_error(delta, batch_size)
 
         # Обратите внимание, что переменная l в цикле ниже используется
         # немного иначе, чем в лекциях.  Здесь l = 1 означает последний слой,

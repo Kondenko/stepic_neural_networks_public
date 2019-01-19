@@ -27,13 +27,14 @@ class World(metaclass=ABCMeta):
 
 class SimpleCarWorld(World):
 
+    COLLISION_RISK_PENALTY = 16 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
     WRONG_HEADING_PENALTY = 0 * 1e0
     IDLENESS_PENALTY = 32 * 1e-1
-    SPEEDING_PENALTY = 32 * 1e-1
+    SPEEDING_PENALTY = 0 * 1e-1
     MIN_SPEED = 0.1 * 1e0
-    MAX_SPEED = 0.7 * 1e0
+    MAX_SPEED = 10 * 1e0
 
     size = (800, 600)
 
@@ -97,9 +98,9 @@ class SimpleCarWorld(World):
             self.circles[a] += angle(self.agent_states[a].position, next_agent_state.position) / (
                     2 * pi)
             self.agent_states[a] = next_agent_state
-            a.receive_feedback(self.reward(next_agent_state, collision))
+            a.receive_feedback(self.reward(vision, next_agent_state, collision))
 
-    def reward(self, state, collision):
+    def reward(self, vision, state, collision):
         """
         Вычисление награды агента, находящегося в состоянии state.
         Эту функцию можно (и иногда нужно!) менять, чтобы обучить вашу сеть именно тем вещам,
@@ -116,9 +117,12 @@ class SimpleCarWorld(World):
             speeding_penalty = 0
         else:
             speeding_penalty = -self.SPEEDING_PENALTY * abs(state.velocity)
-        if collision:
-            print("---> COLLISION <---")
+        if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
+        middle = vision[len(vision) // 2]
+        reward = self.COLLISION_RISK_PENALTY * 1 / middle
+        collision_risk_reward = -reward if (middle <= 2) else reward
+        print(f"    Collision reward: {collision_risk_reward} (middle = {middle})")
         return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty
 
     def eval_reward(self, state, collision):

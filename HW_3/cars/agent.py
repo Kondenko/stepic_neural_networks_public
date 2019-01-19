@@ -34,12 +34,14 @@ class SimpleCarAgent(Agent):
         self._rays = 9  # выберите число лучей ладара; например, 5
         # here +2 is for 2 inputs from elements of Action that we are trying to predict
         # So it's |velocity| + angle + _rays + 2 vars from Action
+        inputs = self.rays + 4
         self.neural_net = Network(
-            sizes=[self.rays + 4,
+            sizes=[inputs,
                    # внутренние слои сети: выберите, сколько и в каком соотношении вам нужно
                    # например, (self.rays + 4) * 2 или просто число
-                   self.rays + 8,
-                   1]
+                   round(inputs / 2),
+                   1
+            ]
             # ,
             # output_function=lambda x: x,
             # output_derivative=lambda x: 1
@@ -142,7 +144,7 @@ class SimpleCarAgent(Agent):
 
         return best_action
 
-    def receive_feedback(self, reward, train_every=30, reward_depth=7):
+    def receive_feedback(self, reward, train_every=50, reward_depth=14):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
         :param reward: оценка внешним миром наших действий
@@ -160,7 +162,7 @@ class SimpleCarAgent(Agent):
         i = -1
         while len(self.reward_history) > abs(i) and abs(i) < reward_depth:
             self.reward_history[i] += reward
-            reward *= 0.5
+            reward *= 0.8
             i -= 1
 
         # Если у нас накопилось хоть чуть-чуть данных, давайте потренируем нейросеть
@@ -171,4 +173,4 @@ class SimpleCarAgent(Agent):
             X_train = np.concatenate([self.sensor_data_history, self.chosen_actions_history], axis=1)
             y_train = self.reward_history
             train_data = [(x[:, np.newaxis], y) for x, y in zip(X_train, y_train)]
-            self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every, eta=0.1)
+            self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every, eta=0.09)
