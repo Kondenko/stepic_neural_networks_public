@@ -132,9 +132,11 @@ class SimpleCarAgent(Agent):
             highest_reward = rewards[np.random.choice(len(rewards))]
             best_action = rewards_to_controls_map[highest_reward]
             # следующие строки помогут вам понять, что предсказывает наша сеть
-            print("Chosen random action w/reward {}: {}".format(highest_reward, best_action))
+            if not self.evaluate_mode:
+                print("Chosen random action w/reward {}: {}".format(highest_reward, best_action))
         else:
-            print("Chosen action w/reward {}: {}".format(highest_reward, best_action))
+            if not self.evaluate_mode:
+                print("Chosen action w/reward {}: {}".format(highest_reward, best_action))
 
         # запомним всё, что только можно: мы хотим учиться на своих ошибках
         self.sensor_data_history.append(sensor_info)
