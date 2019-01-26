@@ -27,7 +27,8 @@ class World(metaclass=ABCMeta):
 
 class SimpleCarWorld(World):
 
-    COLLISION_RISK_PENALTY = 2 * 1e0
+    COLLISION_RISK_PENALTY = 12 * 1e0
+    DEAD_END_PENALTY = 12 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
     WRONG_HEADING_PENALTY = 0 * 1e0
@@ -148,7 +149,8 @@ class SimpleCarWorld(World):
         if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
         collision_risk_reward = self.get_collision_risk_reward(vision)
-        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward
+        dead_end_reward = self.get_dead_end_reward(vision)
+        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward + dead_end_reward
 
     def get_collision_risk_reward(self, vision):
         from utils.funcs import find_middle
@@ -160,6 +162,14 @@ class SimpleCarWorld(World):
         collision_risk_reward = -(self.COLLISION_RISK_PENALTY * distance_from_wall_reward) if (middle <= 1.5) else distance_from_wall_reward
         print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close = {is_close_to_wall})")
         return collision_risk_reward
+
+    def get_dead_end_reward(self, vision):
+        dead_end_distance = 0.75
+        rays_to_disregard = len(vision) // 2
+        is_in_dead_end = all(map(lambda r: r <= dead_end_distance, sorted(vision)[:-rays_to_disregard]))
+        dead_end_reward = self.DEAD_END_PENALTY * int(is_in_dead_end)
+        print(f"Dead end reward: {dead_end_reward}, {is_in_dead_end}")
+        return self.DEAD_END_PENALTY * int(is_in_dead_end)
 
     def eval_reward(self, state, collision):
         """
