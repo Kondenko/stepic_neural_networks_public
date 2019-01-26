@@ -30,9 +30,10 @@ if args.filename:
     w = SimpleCarWorld(1, m, SimplePhysics, SimpleCarAgent, timedelta=0.2)
     if args.evaluate:
         print(f"Evaluating on seed {seed}...")
-        print(f"Error: {w.evaluate_agent(agent, steps, visual)}")
+        mean_error = w.evaluate_agent(agent, steps, visual)
     else:
         w.set_agents([agent])
-        w.run(steps)
+        mean_error = w.run(steps)
+    print(f"Error: {mean_error}")
 else:
     SimpleCarWorld(1, m, SimplePhysics, SimpleCarAgent, timedelta=0.2).run(steps)

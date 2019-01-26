@@ -26,7 +26,8 @@ class World(metaclass=ABCMeta):
 
 
 class SimpleCarWorld(World):
-    COLLISION_RISK_PENALTY = 16 * 1e0
+
+    COLLISION_RISK_PENALTY = 2 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
     WRONG_HEADING_PENALTY = 0 * 1e0
@@ -54,6 +55,30 @@ class SimpleCarWorld(World):
         self.set_agents(num_agents, agent_class)
 
         self._info_surface = pygame.Surface(self.size)
+
+    def run(self, steps=None):
+        """
+        Основной цикл мира; по завершении сохраняет текущие веса агента в файл network_config_agent_n_layers_....txt
+        :param steps: количество шагов цикла; до внешней остановки, если None
+        """
+        rewards = []
+        scale = self._prepare_visualization()
+        for _ in range(steps) if steps is not None else itertools.count():
+            rewards += [self.transition()]
+            self.visualize(scale)
+            if self._update_display() == pygame.QUIT:
+                break
+            sleep(0.1)
+
+        for i, agent in enumerate(self.agents):
+            try:
+                filename = "network_config_agent_%d_layers_%s.txt" % (
+                    i, "_".join(map(str, agent.neural_net.sizes)))
+                agent.to_file(filename)
+                print("Saved agent parameters to '%s'" % filename)
+            except AttributeError:
+                pass
+        return np.mean(rewards)
 
     def set_agents(self, agents=1, agent_class=None):
         """
@@ -88,6 +113,7 @@ class SimpleCarWorld(World):
          смена состояния
          и обработка реакции мира на выбранное действие
         """
+        rewards = []
         for a in self.agents:
             vision = self.vision_for(a)
             action = a.choose_action(vision)
@@ -97,7 +123,10 @@ class SimpleCarWorld(World):
             self.circles[a] += angle(self.agent_states[a].position, next_agent_state.position) / (
                     2 * pi)
             self.agent_states[a] = next_agent_state
-            a.receive_feedback(self.reward(vision, next_agent_state, collision))
+            reward = self.reward(vision, next_agent_state, collision)
+            rewards += [reward]
+            a.receive_feedback(reward)
+        return rewards
 
     def reward(self, vision, state, collision):
         """
@@ -125,10 +154,10 @@ class SimpleCarWorld(World):
         from utils.funcs import find_middle
         middle = find_middle(vision)
         is_close_to_wall = any(map(lambda r: r <= 0.1, vision))
-        wall_closure_reward = 1 / middle
+        distance_from_wall_reward = 1 / middle
         if is_close_to_wall:
-            wall_closure_reward *= 2
-        collision_risk_reward = -(self.COLLISION_RISK_PENALTY * wall_closure_reward) if (middle <= 2) else wall_closure_reward
+            distance_from_wall_reward *= 2
+        collision_risk_reward = -(self.COLLISION_RISK_PENALTY * distance_from_wall_reward) if (middle <= 1.5) else distance_from_wall_reward
         print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close = {is_close_to_wall})")
         return collision_risk_reward
 
@@ -148,28 +177,6 @@ class SimpleCarWorld(World):
 
         return heading_reward * self.HEADING_REWARD + heading_penalty * self.WRONG_HEADING_PENALTY + collision_penalty \
                + idle_penalty + speeding_penalty
-
-    def run(self, steps=None):
-        """
-        Основной цикл мира; по завершении сохраняет текущие веса агента в файл network_config_agent_n_layers_....txt
-        :param steps: количество шагов цикла; до внешней остановки, если None
-        """
-        scale = self._prepare_visualization()
-        for _ in range(steps) if steps is not None else itertools.count():
-            self.transition()
-            self.visualize(scale)
-            if self._update_display() == pygame.QUIT:
-                break
-            sleep(0.1)
-
-        for i, agent in enumerate(self.agents):
-            try:
-                filename = "network_config_agent_%d_layers_%s.txt" % (
-                    i, "_".join(map(str, agent.neural_net.sizes)))
-                agent.to_file(filename)
-                print("Saved agent parameters to '%s'" % filename)
-            except AttributeError:
-                pass
 
     def evaluate_agent(self, agent, steps=1000, visual=True):
         """
