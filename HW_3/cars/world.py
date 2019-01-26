@@ -26,7 +26,6 @@ class World(metaclass=ABCMeta):
 
 
 class SimpleCarWorld(World):
-
     COLLISION_RISK_PENALTY = 16 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
@@ -101,7 +100,6 @@ class SimpleCarWorld(World):
             a.receive_feedback(self.reward(vision, next_agent_state, collision))
 
     def reward(self, vision, state, collision):
-        from utils.funcs import find_middle
         """
         Вычисление награды агента, находящегося в состоянии state.
         Эту функцию можно (и иногда нужно!) менять, чтобы обучить вашу сеть именно тем вещам,
@@ -120,14 +118,19 @@ class SimpleCarWorld(World):
             speeding_penalty = -self.SPEEDING_PENALTY * abs(state.velocity)
         if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
+        collision_risk_reward = self.get_collision_risk_reward(vision)
+        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty
+
+    def get_collision_risk_reward(self, vision):
+        from utils.funcs import find_middle
         middle = find_middle(vision)
         is_close_to_wall = any(map(lambda r: r <= 0.1, vision))
-        reward = self.COLLISION_RISK_PENALTY * 1 / middle
+        wall_closure_reward = 1 / middle
         if is_close_to_wall:
-            reward *= 2
-        collision_risk_reward = -reward if (middle <= 2) else reward
+            wall_closure_reward *= 2
+        collision_risk_reward = -(self.COLLISION_RISK_PENALTY * wall_closure_reward) if (middle <= 2) else wall_closure_reward
         print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close = {is_close_to_wall})")
-        return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty
+        return collision_risk_reward
 
     def eval_reward(self, state, collision):
         """
