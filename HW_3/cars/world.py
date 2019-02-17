@@ -16,6 +16,7 @@ white = (255, 255, 255)
 
 
 class World(metaclass=ABCMeta):
+
     @abstractmethod
     def transition(self):
         pass
@@ -26,9 +27,8 @@ class World(metaclass=ABCMeta):
 
 
 class SimpleCarWorld(World):
-
-    COLLISION_RISK_PENALTY = 12 * 1e0
-    DEAD_END_PENALTY = 12 * 1e0
+    COLLISION_RISK_PENALTY = 8 * 1e0
+    DEAD_END_PENALTY = 8 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
     WRONG_HEADING_PENALTY = 0 * 1e0
@@ -149,26 +149,29 @@ class SimpleCarWorld(World):
         if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
         collision_risk_reward = self.get_collision_risk_reward(vision)
-        dead_end_reward = self.get_dead_end_reward(vision)
+        dead_end_reward = 0  # self.get_dead_end_reward(vision)
         return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward + dead_end_reward
 
     def get_collision_risk_reward(self, vision):
         from utils.funcs import find_middle
+        collision_threshold = 0.8
+        wall_distance_threshold = 0.8
         middle = find_middle(vision)
-        is_close_to_wall = any(map(lambda r: r <= 0.1, vision))
+        is_close_to_wall = any(map(lambda r: r <= wall_distance_threshold, vision))
         distance_from_wall_reward = 1 / middle
-        if is_close_to_wall:
-            distance_from_wall_reward *= 2
-        collision_risk_reward = -(self.COLLISION_RISK_PENALTY * distance_from_wall_reward) if (middle <= 1.5) else distance_from_wall_reward
-        print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close = {is_close_to_wall})")
+        if middle <= collision_threshold or is_close_to_wall:
+            collision_risk_reward = -distance_from_wall_reward
+        else:
+            collision_risk_reward = 0
+        print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close to a wall: {is_close_to_wall})")
         return collision_risk_reward
 
     def get_dead_end_reward(self, vision):
-        dead_end_distance = 0.75
+        dead_end_distance = 1
         rays_to_disregard = len(vision) // 2
         is_in_dead_end = all(map(lambda r: r <= dead_end_distance, sorted(vision)[:-rays_to_disregard]))
         dead_end_reward = self.DEAD_END_PENALTY * int(is_in_dead_end)
-        print(f"Dead end reward: {dead_end_reward}, {is_in_dead_end}")
+        print(f"        Dead end reward: {dead_end_reward}, is in a dead end: {is_in_dead_end}")
         return self.DEAD_END_PENALTY * int(is_in_dead_end)
 
     def eval_reward(self, state, collision):
@@ -296,7 +299,7 @@ class SimpleCarWorld(World):
         rectangle.center = to_px(state.position, scale, self.size)
         return rotated, rectangle
 
-    def _draw_ladar(self, sensors, state, scale):
+    def _draw_ladar(self, sensors, state, scale, show_labels=False):
         surface = pygame.display.get_surface().copy()
         surface.fill(white)
         surface.set_colorkey(white)
@@ -306,6 +309,8 @@ class SimpleCarWorld(World):
         for s in sensors:
             end_pos = to_px(rect(s, ray) + state.position, scale, surface.get_size())
             pygame.draw.line(surface, (0, 255, 0), start_pos, end_pos, 2)
+            if show_labels:
+                draw_text(str(round(s, 2)), surface, 1.0, (100, 50), tlpoint=(end_pos, end_pos))
             ray += delta
 
         rectangle = surface.get_rect()

@@ -39,6 +39,8 @@ class SimpleCarAgent(Agent):
             sizes=[inputs,
                    # внутренние слои сети: выберите, сколько и в каком соотношении вам нужно
                    # например, (self.rays + 4) * 2 или просто число
+                   inputs,
+                   inputs,
                    round(inputs / 2),
                    1
             ]
