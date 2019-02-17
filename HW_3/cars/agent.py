@@ -9,6 +9,7 @@ from learning_algorithms.network import Network
 
 
 class Agent(metaclass=ABCMeta):
+
     @property
     @abstractmethod
     def rays(self):
@@ -43,7 +44,7 @@ class SimpleCarAgent(Agent):
                    inputs,
                    round(inputs / 2),
                    1
-            ]
+                   ]
             # ,
             # output_function=lambda x: x,
             # output_derivative=lambda x: 1
@@ -52,6 +53,8 @@ class SimpleCarAgent(Agent):
         self.chosen_actions_history = deque([], maxlen=history_data)
         self.reward_history = deque([], maxlen=history_data)
         self.step = 0
+        self.eta = 0.0053
+        self.reg_coef = 0.00013
 
     @classmethod
     def from_weights(cls, layers, weights, biases):
@@ -87,6 +90,7 @@ class SimpleCarAgent(Agent):
     @classmethod
     def from_string(cls, s):
         from numpy import array  # это важный импорт, без него не пройдёт нормально eval
+
         layers, weights, biases = eval(s.replace("\n", ""), locals())
         return cls.from_weights(layers, weights, biases)
 
@@ -148,6 +152,10 @@ class SimpleCarAgent(Agent):
 
         return best_action
 
+    def set_hyperparams(self, eta, reg_coef):
+        self.eta = eta
+        self.reg_coef = reg_coef
+
     def receive_feedback(self, reward, train_every=50, reward_depth=20):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
@@ -177,4 +185,4 @@ class SimpleCarAgent(Agent):
             X_train = np.concatenate([self.sensor_data_history, self.chosen_actions_history], axis=1)
             y_train = self.reward_history
             train_data = [(x[:, np.newaxis], y) for x, y in zip(X_train, y_train)]
-            self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every, eta=0.005)
+            self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every, eta=self.eta, reg_coef=self.reg_coef)

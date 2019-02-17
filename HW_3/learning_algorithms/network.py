@@ -52,8 +52,7 @@ class Network(object):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
         assert output_function is not None, "You should either provide output function or leave it default!"
         self.output_function = output_function
         assert output_derivative is not None, "You should either provide derivative of the output function or leave it default!"
@@ -73,7 +72,7 @@ class Network(object):
 
         return output
 
-    def SGD(self, training_data, epochs, mini_batch_size, eta, reg_lambda=0.0001, test_data=None):
+    def SGD(self, training_data, epochs, mini_batch_size, eta, reg_coef, test_data=None):
         """
         Обучить нейронную сеть, используя алгоритм стохастического
         (mini-batch) градиентного спуска.
@@ -101,7 +100,7 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)
             ]
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, eta, reg_lambda, len(training_data))
+                self.update_mini_batch(mini_batch, eta, reg_coef, len(training_data))
             if test_data is not None:
                 success_tests = self.evaluate(test_data)
                 print("Эпоха {0}: {1} / {2}".format(j, success_tests, n_test))
