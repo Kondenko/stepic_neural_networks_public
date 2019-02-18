@@ -1,4 +1,4 @@
-from cmath import rect, phase
+from cmath import rect
 from math import ceil
 
 import numpy as np
@@ -20,7 +20,7 @@ def get_partition(n, a, b=None):
     return a + (b - a) * np.cumsum(sample / sample.sum())
 
 
-def generate_map(sectors, radius, width, scale):
+def generate_map(sectors=8, radius=5, width=3, scale=3):
     """
     :param sectors: number of sectors in the map
     :param radius: average distance between 0 and inner point of map

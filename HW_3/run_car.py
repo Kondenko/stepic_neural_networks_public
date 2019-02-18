@@ -1,14 +1,14 @@
 # from HW_3.cars import *
-from cars.world import SimpleCarWorld
+import argparse
+import os.path
+import random
+
+import numpy as np
+
 from cars.agent import SimpleCarAgent
 from cars.physics import SimplePhysics
 from cars.track import generate_map
-import numpy as np
-import random
-import os.path
-
-import argparse
-
+from cars.world import SimpleCarWorld
 from utils.performance_evaluator import run_and_save_best
 
 parser = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ find_best = args.findbest
 
 def train(world, steps):
     if find_best:
-        run_and_save_best(world, steps)
+        run_and_save_best(lambda map: SimpleCarWorld(1, map, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2), steps)
     else:
         w.set_agents([agent])
         w.run(steps)

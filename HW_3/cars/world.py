@@ -44,7 +44,7 @@ class SimpleCarWorld(World):
         """
         Инициализирует мир
         :param num_agents: число агентов в мире
-        :param car_map: карта, на которой всё происходит (см. track.py0
+        :param car_map: карта, на которой всё происходит (см. track.py)
         :param physics: класс физики, реализующий столкновения и перемещения
         :param agent_class: класс агентов в мире
         :param physics_pars: дополнительные параметры, передаваемые в конструктор класса физики
@@ -101,15 +101,6 @@ class SimpleCarWorld(World):
         mean_rewards = np.mean(rewards, 0)
         assert len(mean_rewards) == len(self.agents), "The number of rewards should correspond to the number of agents"
         return mean_rewards
-
-    def save_to_file(self, agent, number=0):
-        try:
-            filename = "network_config_agent_%d_layers_%s.txt" % (
-                number, "_".join(map(str, agent.neural_net.sizes)))
-            agent.to_file(filename)
-            print("Saved agent parameters to '%s'" % filename)
-        except AttributeError:
-            print("Error saving {} to file".format(agent))
 
     def transition(self):
         """
