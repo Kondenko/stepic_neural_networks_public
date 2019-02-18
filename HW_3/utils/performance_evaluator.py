@@ -12,21 +12,23 @@ def run_and_save_best(world_generator, steps, file=None):
     np.random.seed(None)
     random.seed(None)
     worlds = (world_generator(generate_map()) for _ in range(3))
-    agent_reward_pairs = (run_agents_for_world(w, steps, file) for w in worlds)
-    best_agent, best_reward = max(agent_reward_pairs, key=lambda pair: pair[1])
+    results = []
+    for w in worlds:
+        results += [run_agents_for_world(w, steps, file)]
+    best_agent, best_reward = max(results, key=lambda pair: pair[1])
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
     save_to_file(best_agent)
 
 
-def run_agents_for_world(world, steps, file=None) -> tuple:
+def run_agents_for_world(world, steps, file=None):
     """
     Trains multiple networks with different hyperparameters, chooses the network
     with the best result and saves in to a file. 
     
-    :param generate_world:
     :type world: SimpleCarWorld
     """
-    etas = [0.02, 0.05, 0.1]
+    # etas = [0.02, 0.05, 0.1]
+    etas = [0.02, 0.001, 0.0001]
     reg_coefs = [0.0001, 0.001, 0.01]
     product = list(itertools.product(etas, reg_coefs))
     agents = []
