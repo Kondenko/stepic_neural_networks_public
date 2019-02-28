@@ -11,7 +11,7 @@ from utils.funcs import save_to_file
 def run_and_save_best(world_generator, steps, file=None):
     np.random.seed(None)
     random.seed(None)
-    attempts = 5
+    attempts = 7
     worlds = (world_generator(generate_map()) for _ in range(attempts))
     results = []
     for w in worlds:
@@ -28,8 +28,8 @@ def run_agents_for_world(world, steps, file=None):
     
     :type world: SimpleCarWorld
     """
-    etas = [0.0001, 0.00001]
-    reg_coefs = [0.0001, 0.001]
+    etas = [0.00001]
+    reg_coefs = [0.001]
     product = list(itertools.product(etas, reg_coefs))
     agents = []
     for (eta, reg_coef) in product:

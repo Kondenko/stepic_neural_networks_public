@@ -156,7 +156,7 @@ class SimpleCarAgent(Agent):
         self.eta = eta
         self.reg_coef = reg_coef
 
-    def receive_feedback(self, reward, train_every=50, reward_depth=20):
+    def receive_feedback(self, reward, train_every=75, reward_depth=14):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
         :param reward: оценка внешним миром наших действий
@@ -174,7 +174,7 @@ class SimpleCarAgent(Agent):
         i = -1
         while len(self.reward_history) > abs(i) and abs(i) < reward_depth:
             self.reward_history[i] += reward
-            reward *= 0.8
+            reward *= 0.5
             i -= 1
 
         # Если у нас накопилось хоть чуть-чуть данных, давайте потренируем нейросеть
