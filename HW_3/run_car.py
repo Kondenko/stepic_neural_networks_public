@@ -31,9 +31,9 @@ visual = args.visualise
 find_best = args.findbest
 
 
-def train(world, steps):
+def train(steps, file):
     if find_best:
-        run_and_save_best(lambda map: SimpleCarWorld(1, map, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2), steps)
+        run_and_save_best(lambda map: SimpleCarWorld(1, map, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2), steps, file)
     else:
         w.set_agents([agent])
         w.run(steps)
@@ -46,6 +46,6 @@ if args.filename and os.path.isfile(args.filename):
         print(f"Evaluating on seed {seed}...")
         print(f"Error: {w.evaluate_agent(agent, steps)}")
     else:
-        train(w, steps)
+        train(steps, args.filename)
 else:
-    train(SimpleCarWorld(1, m, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2), steps)
+    train(steps)

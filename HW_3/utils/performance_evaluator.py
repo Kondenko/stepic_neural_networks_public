@@ -27,8 +27,8 @@ def run_agents_for_world(world, steps, file=None):
     
     :type world: SimpleCarWorld
     """
-    etas = [0.001, 0.01, 0.1]
-    reg_coefs = [0.0001, 0.00001, 0.000001]
+    etas = [0.001]
+    reg_coefs = [0.000001, 0.00001, 0.0001]
     product = list(itertools.product(etas, reg_coefs))
     agents = []
     for (eta, reg_coef) in product:
@@ -36,7 +36,7 @@ def run_agents_for_world(world, steps, file=None):
             print("Creating a new agent")
             agent = SimpleCarAgent()
         else:
-            print("Using an agent from file")
+            print(f"Using an agent with weights from {file}")
             agent = SimpleCarAgent.from_file(file)
         agent.set_hyperparams(eta=eta, reg_coef=reg_coef)
         agents += [agent]
