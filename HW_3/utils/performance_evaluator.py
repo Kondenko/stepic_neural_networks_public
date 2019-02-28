@@ -27,9 +27,8 @@ def run_agents_for_world(world, steps, file=None):
     
     :type world: SimpleCarWorld
     """
-    # etas = [0.02, 0.05, 0.1]
-    etas = [0.02, 0.001, 0.0001]
-    reg_coefs = [0.0001, 0.001, 0.01]
+    etas = [0.001, 0.01, 0.1]
+    reg_coefs = [0.0001, 0.00001, 0.000001]
     product = list(itertools.product(etas, reg_coefs))
     agents = []
     for (eta, reg_coef) in product:
