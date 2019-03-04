@@ -31,6 +31,7 @@ class SimpleCarAgent(Agent):
         Создаёт машинку
         :param history_data: количество хранимых нами данных о результатах предыдущих шагов
         """
+        self.print_logs = False
         self.evaluate_mode = False  # этот агент учится или экзаменутеся? если учится, то False
         self._rays = 9  # выберите число лучей ладара; например, 5
         # here +2 is for 2 inputs from elements of Action that we are trying to predict
@@ -138,10 +139,10 @@ class SimpleCarAgent(Agent):
             highest_reward = rewards[np.random.choice(len(rewards))]
             best_action = rewards_to_controls_map[highest_reward]
             # следующие строки помогут вам понять, что предсказывает наша сеть
-            if not self.evaluate_mode:
+            if not self.evaluate_mode and self.print_logs:
                 print("Chosen random action w/reward {}: {}".format(highest_reward, best_action))
         else:
-            if not self.evaluate_mode:
+            if not self.evaluate_mode and self.print_logs:
                 print("Chosen action w/reward {}: {}".format(highest_reward, best_action))
 
         # запомним всё, что только можно: мы хотим учиться на своих ошибках

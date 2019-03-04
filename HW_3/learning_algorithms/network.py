@@ -33,7 +33,7 @@ def sigmoid_prime(z):
 
 class Network(object):
 
-    def __init__(self, sizes, output_function=sigmoid, output_derivative=sigmoid_prime):
+    def __init__(self, sizes, output_function=sigmoid, output_derivative=sigmoid_prime, print_logs=False):
         """
         Список ``sizes`` содержит количество нейронов в соответствующих слоях
         нейронной сети. К примеру, если бы этот лист выглядел как [2, 3, 1],
@@ -58,6 +58,7 @@ class Network(object):
         assert output_derivative is not None, "You should either provide derivative of the output function or leave it default!"
         self.output_derivative = output_derivative
         self.plotter = ErrorPlotter()
+        self.print_logs = print_logs
 
     def feedforward(self, a):
         """
@@ -103,9 +104,11 @@ class Network(object):
                 self.update_mini_batch(mini_batch, eta, reg_coef, len(training_data))
             if test_data is not None:
                 success_tests = self.evaluate(test_data)
-                print("Эпоха {0}: {1} / {2}".format(j, success_tests, n_test))
+                if self.print_logs:
+                    print("Эпоха {0}: {1} / {2}".format(j, success_tests, n_test))
             else:
-                print("Эпоха {0} завершена".format(j))
+                if self.print_logs:
+                    print("Эпоха {0} завершена".format(j))
         if test_data is not None:
             return success_tests / n_test
 
