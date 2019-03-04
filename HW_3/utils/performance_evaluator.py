@@ -34,9 +34,10 @@ def run_agents_for_world(world, steps, file=None):
     Trains multiple networks with different hyperparameters, chooses the network
     with the best result and saves in to a file. 
     
+    :param file: File
     :type world: SimpleCarWorld
     """
-    etas = [0.00001]
+    etas = [0.000001, 0.0000005]
     reg_coefs = [0.001]
     product = list(itertools.product(etas, reg_coefs))
     agents = []
