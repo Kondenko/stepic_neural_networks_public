@@ -1,5 +1,4 @@
 import itertools
-import operator
 import random
 
 import numpy as np
@@ -45,7 +44,7 @@ def run_and_save_best(world_generator, steps, file=None):
     for agent in agents:
         results[agent] = run_agent_for_worlds(agent, worlds, steps)
 
-    best_agent = max(results.items(), key=operator.itemgetter(1))[0]
+    best_agent = max(results, key=results.get)
     best_reward = results[best_agent]
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
 
