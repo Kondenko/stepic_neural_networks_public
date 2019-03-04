@@ -157,7 +157,7 @@ class SimpleCarAgent(Agent):
         self.eta = eta
         self.reg_coef = reg_coef
 
-    def receive_feedback(self, reward, train_every=75, reward_depth=14):
+    def receive_feedback(self, reward, train_every=50, reward_depth=14):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
         :param reward: оценка внешним миром наших действий
