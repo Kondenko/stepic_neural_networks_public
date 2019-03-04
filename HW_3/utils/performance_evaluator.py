@@ -7,6 +7,7 @@ from cars.agent import SimpleCarAgent
 from cars.track import generate_map
 from utils.funcs import save_to_file
 
+latest_error_file_suffid = "_rewards"
 
 def run_and_save_best(world_generator, steps, file=None):
     np.random.seed(None)
@@ -18,8 +19,15 @@ def run_and_save_best(world_generator, steps, file=None):
         results += [run_agents_for_world(w, steps, file)]
     best_agent, best_reward = max(results, key=lambda pair: pair[1])
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
-    save_to_file(best_agent)
-
+    file_path = str(file)
+    dot_index = file_path.find(".")
+    reward_file = file[:dot_index] + latest_error_file_suffid + file[dot_index:]
+    with open(reward_file, 'a+') as f:
+        lines = f.readlines()
+        last_reward = lines[-1] if len(lines) > 0 else None
+        if file is None or last_reward is None or last_reward > best_reward:
+            save_to_file(best_agent)
+            f.write(str(best_reward) + "\n")
 
 def run_agents_for_world(world, steps, file=None):
     """
@@ -42,7 +50,10 @@ def run_agents_for_world(world, steps, file=None):
         agent.set_hyperparams(eta=eta, reg_coef=reg_coef)
         agents += [agent]
     world.set_agents(agents)
-    mean_rewards = world.run(steps)
+    try:
+        mean_rewards = world.run(steps)
+    except AssertionError:
+        mean_rewards = None
     best_agent, best_reward = max(zip(agents, mean_rewards), key=lambda zipped: zipped[1])  # choose max reward
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in world {world}:\n{best_reward}")
     return best_agent, best_reward
