@@ -53,11 +53,14 @@ def run_and_save_best(world_generator, steps, file=None):
     dot_index = file_path.find(".")
     reward_file = file[:dot_index] + latest_error_file_suffid + file[dot_index:]
     with open(reward_file, 'a+') as f:
+        f.seek(0)
         lines = f.readlines()
         last_reward = lines[-1] if len(lines) > 0 else None
-        if file is None or last_reward is None or last_reward > best_reward:
+        if file is None or last_reward is None or float(last_reward) < float(best_reward):
             save_to_file(best_agent)
-            f.write(str(best_reward) + "\n")
+            if last_reward is not None:
+                f.write('\n')
+            f.write(str(best_reward))
 
 
 def run_agent_for_worlds(agent, worlds, steps):
