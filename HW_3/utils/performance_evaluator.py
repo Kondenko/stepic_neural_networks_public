@@ -39,10 +39,12 @@ def run_and_save_best(world_generator, steps, file=None):
         agent.set_hyperparams(eta=eta, reg_coef=reg_coef)
         agents += [agent]
 
-    results = {}
+    errors = []
 
-    for agent in agents:
-        results[agent] = run_agent_for_worlds(agent, worlds, steps)
+    for world in worlds:
+        errors += [run_agent_for_worlds(agents, world, steps)]
+
+    results = dict(zip(agents, np.mean(errors, 0)[0]))
 
     best_agent = max(results, key=results.get)
     best_reward = results[best_agent]
@@ -63,12 +65,11 @@ def run_and_save_best(world_generator, steps, file=None):
             f.write(str(best_reward))
 
 
-def run_agent_for_worlds(agent, worlds, steps):
+def run_agent_for_worlds(agents, world, steps):
     rewards = []
-    for world in worlds:
-        world.set_agents([agent])
-        try:
-            rewards += [world.run(steps)]
-        except AssertionError:
-            rewards += [None]
-    return np.mean(rewards)
+    world.set_agents(agents)
+    try:
+        rewards += [world.run(steps)]
+    except AssertionError:
+        rewards += [None]
+    return rewards
