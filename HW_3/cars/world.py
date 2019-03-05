@@ -28,7 +28,7 @@ class World(metaclass=ABCMeta):
 
 class SimpleCarWorld(World):
 
-    COLLISION_RISK_PENALTY = 16 * 1e0
+    COLLISION_RISK_PENALTY = 24 * 1e0
     DEAD_END_PENALTY = 8 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1

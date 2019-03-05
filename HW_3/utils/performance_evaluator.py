@@ -25,7 +25,7 @@ def run_and_save_best(world_generator, steps, file=None):
     worlds = list(world_generator(generate_map()) for _ in range(attempts))
 
     # create agents with all possible hyperparameters
-    etas = [0.000001, 0.0000005]
+    etas = [0.000004, 0.0000005]
     reg_coefs = [0.001]
     hyperparams_combinations = list(itertools.product(etas, reg_coefs))
     agents = []
