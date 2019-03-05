@@ -21,7 +21,7 @@ def run_and_save_best(world_generator, steps, file=None):
     # create worlds to run the agents on
     np.random.seed(None)
     random.seed(None)
-    attempts = 7
+    attempts = 3
     worlds = list(world_generator(generate_map()) for _ in range(attempts))
 
     # create agents with all possible hyperparameters
@@ -44,10 +44,13 @@ def run_and_save_best(world_generator, steps, file=None):
     for world in worlds:
         errors += [run_agent_for_worlds(agents, world, steps)]
 
-    results = dict(zip(agents, np.mean(errors, 0)[0]))
+    means = np.nanmean(errors, 0)[0]
+    results = dict(zip(agents, means))
 
     best_agent = max(results, key=results.get)
     best_reward = results[best_agent]
+    if type(best_reward) is not np.float64:
+        best_reward = None
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
 
     # write results to files
@@ -58,11 +61,13 @@ def run_and_save_best(world_generator, steps, file=None):
         f.seek(0)
         lines = f.readlines()
         last_reward = lines[-1] if len(lines) > 0 else None
-        if file is None or last_reward is None or float(last_reward) < float(best_reward):
+        if best_reward is not None and (file is None or last_reward is None or float(last_reward) < float(best_reward)):
             save_to_file(best_agent)
             if last_reward is not None:
                 f.write('\n')
             f.write(str(best_reward))
+        else:
+            print(f"Reward ({best_reward}) was invalid or worse than {last_reward} and wasn\'t saved")
 
 
 def run_agent_for_worlds(agents, world, steps):
@@ -71,5 +76,5 @@ def run_agent_for_worlds(agents, world, steps):
     try:
         rewards += [world.run(steps)]
     except AssertionError:
-        rewards += [None]
+        rewards += [[np.nan] * len(agents)]
     return rewards
