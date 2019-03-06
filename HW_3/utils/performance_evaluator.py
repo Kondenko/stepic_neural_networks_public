@@ -51,6 +51,9 @@ def run_and_save_best(world_generator, steps, file=None):
     best_reward = results[best_agent]
     if type(best_reward) is not np.float64:
         best_reward = None
+
+    for agent, result in results.items():
+        print(f"eta={agent.eta}, reg_coef={agent.reg_coef} = {result}")
     print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
 
     # write results to files
