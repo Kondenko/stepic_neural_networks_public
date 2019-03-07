@@ -21,8 +21,8 @@ def run_and_save_best(world_generator, steps, file=None):
     # create worlds to run the agents on
     np.random.seed(None)
     random.seed(None)
-    attempts = 3
-    worlds = list(world_generator(generate_map()) for _ in range(attempts))
+    worlds_number = 3
+    worlds = list(world_generator(generate_map()) for _ in range(worlds_number))
 
     # create agents with all possible hyperparameters
     etas = [0.000004, 0.0000005]
@@ -36,7 +36,8 @@ def run_and_save_best(world_generator, steps, file=None):
         else:
             print(f"Using an agent with weights from {file}")
             agent = SimpleCarAgent.from_file(file)
-        agent.set_hyperparams(eta=eta, reg_coef=reg_coef)
+        agent.eta = eta
+        agent.reg_coef = reg_coef
         agents += [agent]
 
     errors = []

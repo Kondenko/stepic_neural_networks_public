@@ -57,6 +57,9 @@ class SimpleCarAgent(Agent):
         self.step = 0
         self.eta = 0.0053
         self.reg_coef = 0.00013
+        self.epochs = 15
+        self.reward_depth = 7
+        self.train_every = 100
 
     @classmethod
     def from_weights(cls, layers, weights, biases):
@@ -154,11 +157,7 @@ class SimpleCarAgent(Agent):
 
         return best_action
 
-    def set_hyperparams(self, eta, reg_coef):
-        self.eta = eta
-        self.reg_coef = reg_coef
-
-    def receive_feedback(self, reward, train_every=50, reward_depth=14):
+    def receive_feedback(self, reward):
         """
         Получить реакцию на последнее решение, принятое сетью, и проанализировать его
         :param reward: оценка внешним миром наших действий
@@ -174,7 +173,7 @@ class SimpleCarAgent(Agent):
         # (если мы врезались в стену - разумно наказывать не только последнее
         # действие, но и предшествующие)
         i = -1
-        while len(self.reward_history) > abs(i) and abs(i) < reward_depth:
+        while len(self.reward_history) > abs(i) and abs(i) < self.reward_depth:
             self.reward_history[i] += reward
             reward *= 0.5
             i -= 1
@@ -183,8 +182,8 @@ class SimpleCarAgent(Agent):
         # прежде чем собирать новые данные
         # (проверьте, что вы в принципе храните достаточно данных (параметр `history_data` в `__init__`),
         # чтобы условие len(self.reward_history) >= train_every выполнялось
-        if not self.evaluate_mode and (len(self.reward_history) >= train_every) and not (self.step % train_every):
+        if not self.evaluate_mode and (len(self.reward_history) >= self.train_every) and not (self.step % self.train_every):
             X_train = np.concatenate([self.sensor_data_history, self.chosen_actions_history], axis=1)
             y_train = self.reward_history
             train_data = [(x[:, np.newaxis], y) for x, y in zip(X_train, y_train)]
-            self.neural_net.SGD(training_data=train_data, epochs=15, mini_batch_size=train_every, eta=self.eta, reg_coef=self.reg_coef)
+            self.neural_net.SGD(training_data=train_data, epochs=self.epochs, mini_batch_size=self.train_every, eta=self.eta, reg_coef=self.reg_coef)
