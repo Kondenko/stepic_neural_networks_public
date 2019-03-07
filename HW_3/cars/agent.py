@@ -61,6 +61,15 @@ class SimpleCarAgent(Agent):
         self.reward_depth = 7
         self.train_every = 100
 
+    def hyperparams_to_string(self):
+        return f"""
+        eta = {self.eta}
+        reg_coef = {self.reg_coef}
+        epochs = {self.epochs}
+        reward_depth = {self.reward_depth}
+        train_every = {self.train_every}
+        """
+
     @classmethod
     def from_weights(cls, layers, weights, biases):
         """

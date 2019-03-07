@@ -25,19 +25,36 @@ def run_and_save_best(world_generator, steps, file=None):
     worlds = list(world_generator(generate_map()) for _ in range(worlds_number))
 
     # create agents with all possible hyperparameters
-    etas = [0.000004, 0.0000005]
-    reg_coefs = [0.001]
-    hyperparams_combinations = list(itertools.product(etas, reg_coefs))
     agents = []
-    for (eta, reg_coef) in hyperparams_combinations:
+    for (eta, reg_coef, epochs, reward_depth, train_every) \
+            in list(itertools.product(
+            # etas
+            [0.00000001],
+            # reg_coefs
+            [0.5],
+            # epochs
+            [15, 60],
+            # reward_depth
+            [None],
+            # train_every
+            [None]
+    )):
         if file is None:
             print("Creating a new agent")
             agent = SimpleCarAgent()
         else:
             print(f"Using an agent with weights from {file}")
             agent = SimpleCarAgent.from_file(file)
-        agent.eta = eta
-        agent.reg_coef = reg_coef
+        if eta is not None:
+            agent.eta = eta
+        if reg_coef is not None:
+            agent.reg_coef = reg_coef
+        if epochs is not None:
+            agent.epochs = epochs
+        if reward_depth is not None:
+            agent.reward_depth = reward_depth
+        if train_every is not None:
+            agent.train_every = train_every
         agents += [agent]
 
     errors = []
@@ -54,8 +71,9 @@ def run_and_save_best(world_generator, steps, file=None):
         best_reward = None
 
     for agent, result in results.items():
-        print(f"eta={agent.eta}, reg_coef={agent.reg_coef} = {result}")
-    print(f"The agent with eta={best_agent.eta}, reg_coef={best_agent.reg_coef} performed the best in all worlds:\n{best_reward}")
+        print(f"Creating an agent with hyperparams: \n{agent.hyperparams_to_string()} \nError: {result}\n")
+
+    print(f"\n🏆 This agent performed the best in all worlds with the error {best_reward}\n{best_agent.hyperparams_to_string()}")
 
     # write results to files
     file_path = str(file)
