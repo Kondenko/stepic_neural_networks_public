@@ -4,40 +4,45 @@ import random
 import numpy as np
 
 from cars.agent import SimpleCarAgent
+from cars.physics import SimplePhysics
 from cars.track import generate_map
+from cars.world import SimpleCarWorld
 from utils.funcs import save_to_file
 
-latest_error_file_suffid = "_rewards"
+latest_error_file_suffix = "_rewards"
 
 
-def run_and_save_best(world_generator, steps, file=None):
+def run_and_save_best(visual, steps, _map=None, file=None):
     """
     Trains multiple networks with different hyperparameters, chooses the network
     with the best result and saves in to a file.
 
     :param file: File
-    :type world: SimpleCarWorld
     """
     # create worlds to run the agents on
-    np.random.seed(None)
-    random.seed(None)
-    worlds_number = 3
-    worlds = list(world_generator(generate_map()) for _ in range(worlds_number))
+    if _map is None:
+        worlds_number = 3
+        np.random.seed(None)
+        random.seed(None)
+        _map = generate_map()
+        worlds = list(SimpleCarWorld(1, _map, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2) for _ in range(worlds_number))
+    else:
+        worlds = [SimpleCarWorld(1, _map, SimplePhysics, SimpleCarAgent, visual, timedelta=0.2)]
 
     # create agents with all possible hyperparameters
     agents = []
     for (eta, reg_coef, epochs, reward_depth, train_every) \
             in list(itertools.product(
-            # etas
-            [0.00000001],
-            # reg_coefs
-            [0.01, 30],
-            # epochs
-            [60],
-            # reward_depth
-            [7],
-            # train_every
-            [25]
+        # etas
+        [0.00000001],
+        # reg_coefs
+        [0.01],
+        # epochs
+        [60],
+        # reward_depth
+        [7],
+        # train_every
+        [50]
     )):
         if file is None:
             print("Creating a new agent")
@@ -78,7 +83,7 @@ def run_and_save_best(world_generator, steps, file=None):
     # write results to files
     file_path = str(file)
     dot_index = file_path.find(".")
-    reward_file = file[:dot_index] + latest_error_file_suffid + file[dot_index:]
+    reward_file = file[:dot_index] + latest_error_file_suffix + file[dot_index:]
     with open(reward_file, 'a+') as f:
         f.seek(0)
         lines = f.readlines()
@@ -89,7 +94,8 @@ def run_and_save_best(world_generator, steps, file=None):
                 f.write('\n')
             f.write(str(best_reward))
         else:
-            print(f"Reward ({best_reward}) was invalid or worse than {last_reward} and wasn\'t saved")
+            save_to_file(agent=best_agent, prefix="temp_")
+            print(f"Reward ({best_reward}) was invalid or worse than {last_reward} and was saved to a temporary file")
 
 
 def run_agent_for_worlds(agents, world, steps):
