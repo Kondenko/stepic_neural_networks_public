@@ -119,12 +119,12 @@ class SimpleCarWorld(World):
             self.circles[a] += angle(self.agent_states[a].position, next_agent_state.position) / (
                     2 * pi)
             self.agent_states[a] = next_agent_state
-            reward = self.reward(vision, next_agent_state, collision)
+            reward = self.reward(vision, next_agent_state, collision, a.print_logs)
             rewards += [reward]
             a.receive_feedback(reward)
         return rewards
 
-    def reward(self, vision, state, collision):
+    def reward(self, vision, state, collision, print_logs):
         """
         Вычисление награды агента, находящегося в состоянии state.
         Эту функцию можно (и иногда нужно!) менять, чтобы обучить вашу сеть именно тем вещам,
@@ -141,13 +141,14 @@ class SimpleCarWorld(World):
             speeding_penalty = 0
         else:
             speeding_penalty = -self.SPEEDING_PENALTY * abs(state.velocity)
-        # if collision: print("💥💥💥 COLLISION 💥💥💥")
+        if collision and print_logs:
+            print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
-        collision_risk_reward = self.get_collision_risk_reward(vision)
-        dead_end_reward = self.get_dead_end_reward(vision)
+        collision_risk_reward = self.get_collision_risk_reward(vision, print_logs)
+        dead_end_reward = self.get_dead_end_reward(vision, print_logs)
         return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward + dead_end_reward
 
-    def get_collision_risk_reward(self, vision):
+    def get_collision_risk_reward(self, vision, print_logs):
         from utils.funcs import find_middle
 
         collision_threshold = 0.8
@@ -159,15 +160,17 @@ class SimpleCarWorld(World):
             collision_risk_reward = -distance_from_wall_reward
         else:
             collision_risk_reward = 0
-        print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close to a wall: {is_close_to_wall})")
+        if print_logs:
+            print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close to a wall: {is_close_to_wall})")
         return collision_risk_reward
 
-    def get_dead_end_reward(self, vision):
+    def get_dead_end_reward(self, vision, print_logs):
         dead_end_distance = 1
         rays_to_disregard = len(vision) // 2
         is_in_dead_end = all(map(lambda r: r <= dead_end_distance, sorted(vision)[:-rays_to_disregard]))
         dead_end_reward = self.DEAD_END_PENALTY * -int(is_in_dead_end)
-        print(f"        Dead end reward: {dead_end_reward}, is in a dead end: {is_in_dead_end}")
+        if print_logs:
+            print(f"        Dead end reward: {dead_end_reward}, is in a dead end: {is_in_dead_end}")
         return dead_end_reward
 
     def eval_reward(self, state, collision):
