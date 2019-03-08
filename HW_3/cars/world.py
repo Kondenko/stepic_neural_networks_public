@@ -27,8 +27,7 @@ class World(metaclass=ABCMeta):
 
 
 class SimpleCarWorld(World):
-
-    COLLISION_RISK_PENALTY = 24 * 1e0
+    COLLISION_RISK_PENALTY = 32 * 1e0
     DEAD_END_PENALTY = 8 * 1e0
     COLLISION_PENALTY = 32 * 1e0
     HEADING_REWARD = 0 * 1e-1
@@ -145,7 +144,7 @@ class SimpleCarWorld(World):
         # if collision: print("💥💥💥 COLLISION 💥💥💥")
         collision_penalty = -max(abs(state.velocity), 0.1) * int(collision) * self.COLLISION_PENALTY
         collision_risk_reward = self.get_collision_risk_reward(vision)
-        dead_end_reward = 0  # self.get_dead_end_reward(vision)
+        dead_end_reward = self.get_dead_end_reward(vision)
         return heading_reward + heading_penalty + collision_penalty + idle_penalty + speeding_penalty + collision_risk_reward + dead_end_reward
 
     def get_collision_risk_reward(self, vision):
@@ -160,14 +159,14 @@ class SimpleCarWorld(World):
             collision_risk_reward = -distance_from_wall_reward
         else:
             collision_risk_reward = 0
-        # print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close to a wall: {is_close_to_wall})")
+        print(f"    Collision reward: {collision_risk_reward} (middle = {middle}, is close to a wall: {is_close_to_wall})")
         return collision_risk_reward
 
     def get_dead_end_reward(self, vision):
         dead_end_distance = 1
         rays_to_disregard = len(vision) // 2
         is_in_dead_end = all(map(lambda r: r <= dead_end_distance, sorted(vision)[:-rays_to_disregard]))
-        dead_end_reward = self.DEAD_END_PENALTY * int(is_in_dead_end)
+        dead_end_reward = self.DEAD_END_PENALTY * -int(is_in_dead_end)
         print(f"        Dead end reward: {dead_end_reward}, is in a dead end: {is_in_dead_end}")
         return dead_end_reward
 

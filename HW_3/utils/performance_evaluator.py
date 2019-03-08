@@ -31,13 +31,13 @@ def run_and_save_best(world_generator, steps, file=None):
             # etas
             [0.00000001],
             # reg_coefs
-            [0.5],
+            [0.01, 30],
             # epochs
-            [15, 60],
+            [60],
             # reward_depth
-            [None],
+            [7],
             # train_every
-            [None]
+            [25]
     )):
         if file is None:
             print("Creating a new agent")
