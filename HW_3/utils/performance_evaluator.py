@@ -34,15 +34,15 @@ def run_and_save_best(visual, steps, _map=None, file=None):
     for (eta, reg_coef, epochs, reward_depth, train_every) \
             in list(itertools.product(
         # etas
-        [0.00000001],
+        [1e-05],
         # reg_coefs
-        [0.01],
+        [32],
         # epochs
         [60],
         # reward_depth
-        [7],
-        # train_every
-        [50]
+        [7, 10],
+        # train_every / batch size
+        [25, 50]
     )):
         if file is None:
             print("Creating a new agent")

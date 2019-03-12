@@ -31,7 +31,7 @@ class SimpleCarAgent(Agent):
         Создаёт машинку
         :param history_data: количество хранимых нами данных о результатах предыдущих шагов
         """
-        self.print_logs = False
+        self.print_logs = True
         self.evaluate_mode = False  # этот агент учится или экзаменутеся? если учится, то False
         self._rays = 9  # выберите число лучей ладара; например, 5
         # here +2 is for 2 inputs from elements of Action that we are trying to predict
