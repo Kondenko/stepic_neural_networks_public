@@ -34,15 +34,15 @@ def run_and_save_best(visual, steps, _map=None, file=None):
     for (eta, reg_coef, epochs, reward_depth, train_every) \
             in list(itertools.product(
         # etas
-        [1e-05],
+        [1e-05, 1e-07],
         # reg_coefs
         [32],
         # epochs
         [60],
         # reward_depth
-        [7, 10],
+        [15],
         # train_every / batch size
-        [25, 50]
+        [50]
     )):
         if file is None:
             print("Creating a new agent")
@@ -78,7 +78,7 @@ def run_and_save_best(visual, steps, _map=None, file=None):
     for agent, result in results.items():
         print(f"Creating an agent with hyperparams: \n{agent.hyperparams_to_string()} \nError: {result}\n")
 
-    print(f"\n🏆 This agent performed the best in all worlds with the error {best_reward}\n{best_agent.hyperparams_to_string()}")
+    print(f"🏆 This agent performed the best in all worlds with the error {best_reward}\n{best_agent.hyperparams_to_string()}")
 
     # write results to files
     file_path = str(file)
