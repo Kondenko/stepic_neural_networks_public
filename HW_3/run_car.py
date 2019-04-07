@@ -44,6 +44,7 @@ if args.filename and os.path.isfile(file):
     if args.evaluate:
         print(f"Evaluating on seed {seed}...")
         print(f"Error: {w.evaluate_agent(agent, steps)}")
+        print(f"Circles: {w.circles}")
     else:
         train()
 else:

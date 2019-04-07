@@ -34,7 +34,7 @@ def run_and_save_best(visual, steps, _map=None, file=None):
     for (eta, reg_coef, epochs, reward_depth, train_every) \
             in list(itertools.product(
         # etas
-        [1e-05, 1e-07],
+        [1e-01],
         # reg_coefs
         [32],
         # epochs
